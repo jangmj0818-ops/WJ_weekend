@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>주말 비서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* 디자인 토큰: CLAUDE.md 7장, 시안 "주말 비서 홈 와이어프레임" */
+:root {
+  --bg: #F6F5F1;
+  --card: #FFFFFF;
+  --line: #E2DFD8;
+  --line-strong: #CFCBC2;
+  --dash: #B9B4AA;
+  --text: #1C1C1A;
+  --sub: #5E5C57;
+  --body2: #3D3B37;
+  --accent: #1E5E59;
+  --tag-bg: #DCEBE8;
+  --tag-fg: #154743;
+  --warn-bg: #FDEBD8;
+  --warn-fg: #8A3D06;
+  --neutral-bg: #ECEAE4;
+  --neutral-fg: #4A4843;
+  --muted: #EFEDE7;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { font-family: 'IBM Plex Sans KR', system-ui, sans-serif; -webkit-text-size-adjust: 100%; min-height: 100vh; }
+button, input, textarea { font: inherit; color: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a { color: var(--accent); }
+
+.wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+.view { display: flex; flex-direction: column; gap: 28px; }
+.view.detail { gap: 24px; padding-bottom: 100px; }
+h1 { margin: 0; font-size: 24px; line-height: 1.3; font-weight: 600; }
+h2 { margin: 0; font-size: 19px; font-weight: 600; }
+h3, .h16 { margin: 0; font-size: 16px; font-weight: 600; }
+p { margin: 0; }
+.sub { font-size: 13px; color: var(--sub); }
+.small { font-size: 12px; }
+.body2 { font-size: 14px; color: var(--body2); line-height: 1.6; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.stack-s { display: flex; flex-direction: column; gap: 8px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.row-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.hdr-text { display: flex; flex-direction: column; gap: 6px; }
+.chip { align-self: flex-start; font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--tag-bg); color: var(--tag-fg); border: 0; }
+.chip-btn { min-height: 44px; padding: 0 14px; background: var(--warn-bg); color: var(--warn-fg); font-weight: 600; cursor: pointer; }
+.icon-btn { width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--card); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.count { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--text); color: #FFFFFF; }
+.count-warn { background: var(--warn-fg); }
+
+.tabs { position: sticky; top: 8px; z-index: 5; margin-top: -12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 12px; background: var(--neutral-bg); }
+.tab { min-height: 44px; padding: 0 4px; border: 0; border-radius: 9px; background: transparent; color: var(--sub); font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; cursor: pointer; }
+.spot { background: #FFFBEF; border-color: #EBD9A8; }
+.hl { font-size: 13px; color: var(--tag-fg); }
+details.wk { padding: 0 16px; }
+details.wk > summary { min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 15px; font-weight: 600; cursor: pointer; list-style: none; }
+details.wk > summary::-webkit-details-marker { display: none; }
+details.wk > summary::after { content: '▾'; color: var(--sub); }
+details.wk[open] > summary::after { content: '▴'; }
+.wk-day { padding: 4px 0 12px; border-top: 1px solid var(--line); }
+.wk-day h3 { font-size: 14px; padding: 10px 0 2px; color: var(--sub); }
+.mini { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+.mini .btn { min-height: 36px; font-size: 13px; }
+.tab[aria-selected="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(28, 28, 26, .14); }
+.hint { min-height: 44px; padding: 10px 14px; border-radius: 12px; border: 0; background: var(--warn-bg); color: var(--warn-fg); font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+.pad { padding: 16px; }
+.bk { padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.badge { font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 6px; }
+.badge.lg { font-size: 12px; padding: 3px 8px; }
+.tag { font-size: 12px; padding: 3px 8px; border-radius: 999px; }
+.t-top { background: var(--tag-bg); color: var(--tag-fg); }
+.t-alt, .t-check { background: var(--neutral-bg); color: var(--neutral-fg); }
+.t-warn, .t-urgent { background: var(--warn-bg); color: var(--warn-fg); }
+.warn-text { color: var(--warn-fg) !important; }
+
+.btn { min-height: 44px; padding: 0 12px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--card); color: var(--text); font-size: 14px; text-decoration: none; cursor: pointer; }
+.btn.primary { border-color: var(--accent); background: var(--accent); color: #FFFFFF; font-weight: 600; }
+.btn:disabled, .btn-lg:disabled { opacity: .6; cursor: default; }
+.btn-row { display: flex; gap: 8px; margin-top: 6px; }
+.btn-row > * { flex: 1; }
+
+.day { min-height: 76px; padding: 12px; border-radius: 14px; border: 2px solid var(--line); background: var(--muted); text-align: left; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+.day.on { border-color: var(--accent); background: var(--card); }
+.day-w { font-size: 16px; font-weight: 600; }
+
+.list { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 16px; }
+.row + .row { border-top: 1px solid var(--line); }
+.row .btn { flex-shrink: 0; }
+.row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.name { font-size: 15px; font-weight: 600; }
+.meta { font-size: 13px; color: var(--sub); }
+.planned { font-size: 12px; font-weight: 600; color: var(--tag-fg); }
+.more { min-height: 44px; border-radius: 10px; border: 1px dashed var(--dash); background: transparent; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+.empty { padding: 20px 16px; text-align: center; color: var(--sub); font-size: 14px; line-height: 1.6; }
+.empty .btn { margin: 12px auto 0; }
+.foot { font-size: 12px; color: var(--sub); display: flex; flex-direction: column; gap: 2px; }
+.loading { padding: 48px 0; text-align: center; color: var(--sub); font-size: 14px; }
+
+.dtop { display: flex; align-items: center; justify-content: space-between; margin: -8px 0 -8px -4px; }
+.back { min-height: 44px; padding: 0 12px 0 4px; display: flex; align-items: center; gap: 4px; background: none; border: 0; font-size: 15px; cursor: pointer; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.cell { padding: 10px 12px; border-radius: 10px; background: var(--bg); display: flex; flex-direction: column; gap: 2px; }
+.cell .k { font-size: 12px; color: var(--sub); }
+.cell .v { font-size: 14px; font-weight: 600; }
+.cell .s { font-size: 12px; color: var(--sub); }
+.hrow { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.hrow .v { font-weight: 600; text-align: right; }
+.linkbtn { min-height: 44px; padding: 0; background: none; border: 0; color: var(--accent); text-decoration: underline; font-size: 12px; cursor: pointer; }
+.rate { border: 2px solid var(--accent); }
+.sel-good { background: var(--accent) !important; border-color: var(--accent) !important; color: #FFFFFF !important; font-weight: 600; }
+.sel-bad { background: var(--neutral-fg) !important; border-color: var(--neutral-fg) !important; color: #FFFFFF !important; font-weight: 600; }
+
+.bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--line); }
+.bar-in { max-width: 448px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.btn-lg { min-height: 52px; border-radius: 12px; border: 1px solid var(--accent); background: var(--card); color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn-lg.on { background: var(--tag-bg); color: var(--tag-fg); }
+.btn-lg.primary { border: 0; background: var(--accent); color: #FFFFFF; }
+
+form .field, fieldset.field { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; border: 0; min-width: 0; }
+label, legend { font-size: 14px; font-weight: 600; padding: 0; }
+.lbl-s { font-size: 13px; font-weight: 400; color: var(--sub); }
+input[type=text], input[type=date], input[type=number], textarea { width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--card); font-size: 16px; }
+.checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; }
+.check-item { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; font-weight: 400; }
+.check-item input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+#toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 10px; background: var(--text); color: #FFFFFF; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<main id="app" class="wrap"><div class="loading">불러오는 중…</div></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+(function () {
+  var S = { key: '', home: null, tab: 'weekend', day: '', page: {}, view: 'home', detail: null, settings: null, homeStale: false, homeScroll: 0, records: null, recordsStale: false };
+  var app = document.getElementById('app');
+  var ICON = {
+    settings: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
+    refresh: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>',
+    back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
+  };
+
+  // 이모지: 한눈에 구분되도록 유형·날씨·섹션 앞에만 붙인다
+  var CAT_EMOJI = {
+    park: '🌳', playground: '🛝', kids_cafe_public: '🧸', kids_cafe_private: '🧸', library: '📚', museum: '🏛️',
+    indoor_zoo: '🐾', indoor_mall: '🛍️', experience: '🎨', event_venue: '🎪', view_spot: '🔭', event: '🎉'
+  };
+  var SKY_EMOJI = { '맑음': '☀️', '구름 조금': '⛅', '흐림': '☁️', '안개': '🌫️', '이슬비': '🌦️', '비': '🌧️', '눈': '❄️', '소나기': '🌦️', '뇌우': '⛈️' };
+  var BADGE_EMOJI = { '이번 주만': '✨', '토요일만': '📅', '일요일만': '📅', '예약 필요': '🎟️', '예약 마감 가능': '⚠️', '구경거리': '🔭', '처음 추천': '🆕' };
+  var KID_EMOJI = { '적합 월령': '👶', '대상 연령': '👶', '수유실': '🍼', '유모차': '🚼', '주차': '🅿️', '요금': '💳', '아이 동반': '🚸' };
+  function weatherEmoji(w) {
+    if (!w || !w.known) return '🗓️';
+    if (w.rain) return '🌧️';
+    if (w.badAir) return '😷';
+    return SKY_EMOJI[w.sky] || '🌤️';
+  }
+  function badgeText(b) { return (BADGE_EMOJI[b] || (/이상$/.test(b) ? '👶' : '')) + ' ' + b; }
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  // 받침이 있으면 a(이), 없으면 b(가)
+  function josa(word, a, b) {
+    var c = String(word).charCodeAt(String(word).length - 1);
+    return c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? a : b;
+  }
+  function msgOf(err) { return (err && err.message) || String(err || '문제가 생겼어요'); }
+
+  function call(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return new Promise(function (resolve, reject) {
+      var runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+      runner[fn].apply(runner, [S.key].concat(args));
+    });
+  }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+  function loading() { app.innerHTML = '<div class="loading">불러오는 중…</div>'; }
+  function showError(err) {
+    app.innerHTML = '<div class="card empty"><p>' + esc(msgOf(err)) + '</p><button class="btn" data-act="reload">다시 불러오기</button></div>';
+  }
+
+  // ── 화면 이동: google.script.history로 휴대폰 뒤로 가기를 지원한다
+  function nav(state) {
+    try { google.script.history.push(state); } catch (e) { /* 기록 없이도 동작 */ }
+    route(state);
+  }
+  function route(st) {
+    st = st || {};
+    if (st.v === 'd') return openDetail(st.t, st.id, st.day);
+    if (st.v === 's') return openSettings();
+    return showHome();
+  }
+  function rememberScroll() { if (S.view === 'home') S.homeScroll = window.scrollY; }
+
+  // ── 홈
+  function kstSunday() { return new Date(Date.now() + 9 * 3600 * 1000).getUTCDay() === 0; }
+  function loadHome() {
+    loading();
+    return call('getHome').then(function (h) {
+      S.home = h;
+      S.homeStale = false;
+      if (!S.day) S.day = kstSunday() ? 'sun' : 'sat';
+      renderHome();
+    }).catch(showError);
+  }
+  function showHome() {
+    S.view = 'home';
+    if (!S.home || S.homeStale) return loadHome().then(function () { window.scrollTo(0, S.homeScroll); });
+    renderHome();
+    window.scrollTo(0, S.homeScroll);
+  }
+
+  function plannedText(me, others) {
+    if (me && others.length) return '💚 둘 다 담았어요';
+    if (others.length) return '💌 ' + others.join(', ') + josa(others[others.length - 1], '이', '가') + ' 담았어요';
+    if (me) return '📌 내가 담았어요';
+    return '';
+  }
+
+  function renderHome() {
+    var h = S.home;
+    var child = h.child.months == null
+      ? '<button class="chip chip-btn" data-act="settings">아이 생년월일 입력하기</button>'
+      : '<span class="chip">👶 우리 아이 ' + h.child.months + '개월</span>';
+    var notifyParts = String(h.notifyLabel || '').split(' · ');
+    var nBook = h.bookings.length;
+    var nSoon = h.bookings.filter(function (b) { return b.group === 'soon'; }).length;
+    function tab(id, label, extra) {
+      var on = S.tab === id;
+      return '<button class="tab" role="tab" aria-selected="' + on + '" data-act="tab" data-tab="' + id + '">' + label + extra + '</button>';
+    }
+
+    app.innerHTML =
+      '<div class="view">' +
+        '<header class="hdr">' +
+          '<div class="hdr-text">' +
+            '<div class="sub">' + esc(h.base.label) + ' 기준 · ' + esc(h.base.reach) + '</div>' +
+            '<h1>이번 주말, 어디 갈까 🍯</h1>' + child +
+          '</div>' +
+          '<button class="icon-btn" data-act="settings" aria-label="설정">' + ICON.settings + '</button>' +
+        '</header>' +
+        '<div class="tabs" role="tablist" aria-label="보기">' +
+          tab('weekend', '🗓️ 이번 주말', '') +
+          tab('book', '🎟️ 예약', nBook ? '<span class="count' + (nSoon ? ' count-warn' : '') + '">' + nBook + '</span>' : '') +
+          tab('rec', '📒 기록', '') +
+        '</div>' +
+        (S.tab === 'book' ? bookTabHtml(h) : S.tab === 'rec' ? recordsTabHtml() : weekendTabHtml(h, nSoon, notifyParts)) +
+        '<footer class="foot">' +
+          '<div>🔄 마지막 갱신 ' + esc(h.updatedAt || '아직 없음') + ' · 🔔 다음 알림 ' + esc(h.nextNotify) + '</div>' +
+          (notifyParts[1] ? '<div>💬 알림은 ' + esc(notifyParts[1]) + '으로 와요</div>' : '') +
+        '</footer>' +
+      '</div>';
+  }
+
+  function weekendTabHtml(h, nSoon, notifyParts) {
+    var d = h.days.filter(function (x) { return x.day === S.day; })[0] || h.days[0];
+    var spots = d.spots && d.spots.length
+      ? '<div class="stack-s" id="sec-' + d.day + '-spot"><div class="row-title"><h3>🔭 이번 주 구경거리</h3><span class="tag t-top">' + d.spots.length + '곳</span></div>' +
+        '<div class="card list spot">' + d.spots.map(itemHtml).join('') + '</div></div>'
+      : '';
+    var week = h.hasCandidates
+      ? '<p class="body2">' + esc(d.lead) + '</p>' + spots + d.sections.map(function (s) { return sectionHtml(d, s); }).join('') +
+        '<p class="sub">매일 아침 날씨에 맞춰 실내·실외 순서가 다시 정렬돼요</p>'
+      : '<div class="card empty">이번 주 추천을 아직 만들지 않았어요.<br>' + esc(notifyParts[0]) + ' 알림 전에 채워져요.</div>';
+    return (nSoon ? '<button class="hint" data-act="tab" data-tab="book">⏰ 예약이 곧 열리는 곳이 ' + nSoon + '곳 있어요 · 예약할 것 보기</button>' : '') +
+      '<section class="stack" aria-label="이번 주말">' +
+        '<div class="grid2" role="group" aria-label="요일 선택">' + h.days.map(function (x) {
+          var on = x.day === d.day;
+          return '<button class="day' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-act="day" data-day="' + x.day + '">' +
+            '<span class="sub">' + esc(x.label) + '</span><span class="day-w">' + weatherEmoji(x.weather) + ' ' + esc(x.weather.label) + '</span></button>';
+        }).join('') + '</div>' +
+        week +
+      '</section>' +
+      eventsHtml(h.events);
+  }
+
+  // 기록 탭: 처음 열 때(또는 반응을 남긴 뒤) 서버에서 불러온다
+  function loadRecords() {
+    call('getRecords').then(function (r) {
+      S.records = r;
+      S.recordsStale = false;
+      if (S.view === 'home' && S.tab === 'rec') renderHome();
+    }).catch(function (err) { toast(msgOf(err)); });
+  }
+
+  function miniRow(x, extra) {
+    return '<div class="mini"><div class="row-main"><span class="name">' + (CAT_EMOJI[x.category] ? CAT_EMOJI[x.category] + ' ' : '') + esc(x.name) + '</span>' +
+      (extra ? '<span class="meta">' + esc(extra) + '</span>' : '') + '</div>' +
+      '<button class="btn" data-act="open" data-type="' + x.ref_type + '" data-id="' + esc(x.ref_id) + '">상세정보</button></div>';
+  }
+
+  function recordsTabHtml() {
+    var r = S.records;
+    if (!r || S.recordsStale) {
+      loadRecords();
+      if (!r) return '<div class="loading">기록을 불러오는 중…</div>';
+    }
+    var fav = r.favorites.length
+      ? '<div class="card list">' + r.favorites.map(function (x) {
+          return '<div class="row">' + miniRow(x, x.date + ' · ' + x.member) + '</div>';
+        }).join('') + '</div>'
+      : '<div class="card empty">아직 없어요. 다녀온 뒤 😍 또 갈래요를 누르면 여기에 모여요.</div>';
+    var rateText = { good: '😍 또 갈래요', bad: '😕 별로였어요' };
+    var visits = r.visits.length
+      ? '<div class="card list">' + r.visits.map(function (x) {
+          return '<div class="row">' + miniRow(x, x.date + ' · ' + x.member + (x.rating ? ' · ' + rateText[x.rating] : '')) + '</div>';
+        }).join('') + '</div>'
+      : '<div class="card empty">아직 없어요. 상세정보에서 👣 다녀왔어요를 누르면 기록돼요.</div>';
+    var weeks = r.weeks.length
+      ? r.weeks.map(function (w) {
+          var n = w.days[0].items.length + w.days[1].items.length;
+          return '<details class="card wk"><summary><span>' + esc(w.label) + ' 주말</span><span class="sub">' + n + '곳</span></summary>' +
+            w.days.map(function (d) {
+              if (!d.items.length) return '';
+              return '<div class="wk-day"><h3>' + d.label + '요일</h3>' + d.items.map(function (x) {
+                return miniRow(x, x.spot ? '🔭 구경거리' : (x.io === 'indoor' ? '🏠 실내' : '🌳 실외'));
+              }).join('') + '</div>';
+            }).join('') + '</details>';
+        }).join('')
+      : '<div class="card empty">지난 추천이 아직 없어요. 다음 주부터 쌓여요.</div>';
+    return '<section class="stack" aria-label="또 갈래요"><div class="row-title"><h2>💛 또 갈래요</h2><span class="count">' + r.favorites.length + '</span></div>' + fav + '</section>' +
+      '<section class="stack" aria-label="다녀온 곳"><div class="row-title"><h2>👣 다녀온 곳</h2><span class="count">' + r.visits.length + '</span></div>' + visits + '</section>' +
+      '<section class="stack" aria-label="지난 추천"><div class="row-title"><h2>🗂️ 지난 추천</h2></div><p class="sub">최근 8주 동안 각 섹션 첫 5곳과 구경거리예요</p>' + weeks + '</section>';
+  }
+
+  // 예약할 것 탭: 오픈이 가까운 순서로 묶어서 보여준다
+  function bookTabHtml(h) {
+    var groups = [
+      ['soon', '⏰ 곧 열려요', '오픈이 7일 안이거나 이미 열린 곳이에요'],
+      ['later', '📆 나중에 열려요', ''],
+      ['unknown', '🔍 오픈 시각 확인 필요', '예약 규칙을 아직 확인하지 못했어요. 예약 페이지에서 직접 확인해 주세요'],
+      ['booked', '✅ 예약해 둔 곳', '']
+    ];
+    var all = h.bookings.concat(h.booked || []);
+    var html = groups.map(function (g) {
+      var list = all.filter(function (b) { return b.group === g[0]; });
+      if (!list.length) return '';
+      return '<section class="stack" aria-label="' + g[1] + '">' +
+        '<div class="row-title"><h2>' + g[1] + '</h2><span class="count' + (g[0] === 'soon' ? ' count-warn' : '') + '">' + list.length + '</span></div>' +
+        (g[2] ? '<p class="sub">' + g[2] + '</p>' : '') +
+        list.map(bookingCardHtml).join('') + '</section>';
+    }).join('');
+    return html || '<div class="card empty">지금 예약할 곳이 없어요.<br>추천에 예약이 필요한 곳이 생기면 여기에 모여요.</div>';
+  }
+
+  function bookingCardHtml(b) {
+    var booked = b.group === 'booked';
+    return '<article class="card bk">' +
+      '<div class="row-title"><span class="badge lg t-' + b.tone + '">' + esc(b.badge) + '</span><span class="sub">' + esc(b.when) + '</span></div>' +
+      '<h3>' + esc(b.name) + '</h3>' +
+      (booked ? '' : '<div class="body2" style="font-size:13px">' + esc(b.rule) + '</div>') +
+      '<div class="btn-row">' +
+        '<button class="btn" data-act="open" data-type="place" data-id="' + esc(b.place_id) + '">상세정보</button>' +
+        (!booked && b.url ? '<a class="btn" href="' + esc(b.url) + '" target="_blank" rel="noopener">예약 페이지</a>' : '') +
+        (booked ? '' : '<button class="btn primary" data-act="booked" data-key="' + esc(b.key) + '">예약 완료</button>') +
+      '</div></article>';
+  }
+
+  function sectionHtml(d, s) {
+    var key = d.day + ':' + s.io;
+    var pages = Math.max(1, Math.ceil(s.items.length / 5));
+    var pg = (S.page[key] || 0) % pages;
+    var items = s.items.slice(pg * 5, pg * 5 + 5);
+    var more = pages > 1
+      ? '<button class="more" data-act="more" data-key="' + key + '" data-pages="' + pages + '">' + ICON.refresh +
+        (pg === pages - 1 ? '처음 추천으로 돌아가기' : '다른 5곳 추천받기') + ' · ' + (pg + 1) + '/' + pages + '</button>'
+      : '';
+    return '<div class="stack-s" id="sec-' + d.day + '-' + s.io + '">' +
+      '<div class="row-title"><h3>' + (s.io === 'indoor' ? '🏠 ' : '🌳 ') + esc(s.title) + ' ' + items.length + '곳</h3><span class="tag t-' + s.tone + '">' + esc(s.tag) + '</span></div>' +
+      (items.length ? '<div class="card list">' + items.map(itemHtml).join('') + '</div>'
+        : '<div class="card empty">이번 주 ' + esc(s.title) + ' 후보가 없어요</div>') +
+      more + '</div>';
+  }
+
+  function itemHtml(p) {
+    var pt = plannedText(p.plannedMe, p.plannedOthers);
+    return '<div class="row"><div class="row-main">' +
+      '<div class="row-title" style="gap:6px"><span class="name">' + (CAT_EMOJI[p.category] ? CAT_EMOJI[p.category] + ' ' : '') + esc(p.name) + '</span>' +
+        // '구경거리'는 칸 제목으로 보여주므로 배지는 생략한다
+        p.badges.filter(function (b) { return b !== '구경거리'; }).map(function (b) { return '<span class="badge t-warn">' + esc(badgeText(b)) + '</span>'; }).join('') + '</div>' +
+      '<div class="meta">' + esc(p.meta) + '</div>' +
+      (p.highlight ? '<div class="hl">🔭 ' + esc(p.highlight) + '</div>' : '') +
+      (pt ? '<div class="planned">' + esc(pt) + '</div>' : '') +
+      '</div><button class="btn" data-act="open" data-type="' + p.ref_type + '" data-id="' + esc(p.ref_id) + '">상세정보</button></div>';
+  }
+
+  function eventsHtml(list) {
+    if (!list || !list.length) return '';
+    return '<section class="stack" aria-label="다가오는 행사"><h2>🎉 다가오는 행사</h2><div class="card list">' +
+      list.map(function (e) {
+        return '<div class="row"><div class="row-main"><span class="name">🎪 ' + esc(e.name) + '</span>' +
+          '<span class="meta">' + esc([e.when, e.venue].filter(Boolean).join(' · ')) + '</span></div>' +
+          '<button class="btn" data-act="open" data-type="event" data-id="' + esc(e.event_id) + '">상세정보</button></div>';
+      }).join('') + '</div></section>';
+  }
+
+  // ── 상세정보
+  function openDetail(type, id, day) {
+    rememberScroll();
+    S.view = 'detail';
+    if (day) S.day = day;
+    loading();
+    window.scrollTo(0, 0);
+    call('getPlace', type, id, S.day || 'sat').then(function (p) {
+      S.detail = p;
+      renderDetail();
+    }).catch(showError);
+  }
+
+  function renderDetail() {
+    var p = S.detail;
+    var day = S.day === 'sun' ? 'sun' : 'sat';
+    var dayKo = day === 'sun' ? '일요일' : '토요일';
+    var plan = p.plan[day] || { me: false, others: [] };
+    var pt = plannedText(plan.me, plan.others);
+    var cells = p.kid.map(function (c) {
+      return '<div class="cell"><span class="k">' + (KID_EMOJI[c.label] ? KID_EMOJI[c.label] + ' ' : '') + esc(c.label) + '</span>' +
+        '<span class="v' + (c.warn ? ' warn-text' : '') + '">' + esc(c.value) + '</span>' +
+        (c.sub ? '<span class="s' + (c.warnSub ? ' warn-text' : '') + '">' + esc(c.sub) + '</span>' : '') + '</div>';
+    }).join('');
+    var sc = p.schedule;
+    var rows = sc.rows.map(function (r) {
+      return '<div class="hrow"><span class="sub">' + esc(r.label) + '</span><span class="v' + (r.warn ? ' warn-text' : '') + '">' +
+        esc(r.value) + (r.note ? ' · ' + esc(r.note) : '') + '</span></div>';
+    }).join('');
+    var sources = p.sources.length
+      ? p.sources.map(function (s) { return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.host) + '</a>'; }).join(' · ')
+      : '확인 기록 없음';
+    var rate = p.visited
+      ? '<section class="card pad stack-s rate" aria-label="다녀온 뒤"><h2 class="h16">우리 아이는 어땠나요?</h2><div class="sub">다음 추천에 반영돼요</div>' +
+        '<div class="grid2"><button class="btn' + (p.rating === 'good' ? ' sel-good' : '') + '" data-act="rate" data-v="good">😍 또 갈래요</button>' +
+        '<button class="btn' + (p.rating === 'bad' ? ' sel-bad' : '') + '" data-act="rate" data-v="bad">😕 별로였어요</button></div></section>'
+      : '';
+    var bar = p.onWeekend
+      ? '<div class="bar"><div class="bar-in">' +
+          '<button class="btn-lg' + (plan.me ? ' on' : '') + '" aria-pressed="' + plan.me + '" data-act="plan">' + (plan.me ? '💚 ' : '📌 ') + dayKo + (plan.me ? ' 계획에 담김' : ' 계획에 담기') + '</button>' +
+          '<button class="btn-lg primary" data-act="visited"' + (p.visited ? ' disabled' : '') + '>' + (p.visited ? '✅ 다녀온 곳이에요' : '👣 다녀왔어요') + '</button>' +
+        '</div></div>'
+      : '';
+
+    app.innerHTML =
+      '<div class="view detail"' + (p.onWeekend ? '' : ' style="padding-bottom:0"') + '>' +
+        '<div class="dtop"><button class="back" data-act="home">' + ICON.back + '홈</button>' +
+          '<span class="sub small">' + (p.checkedAt ? '정보 확인 ' + esc(p.checkedAt) : '') + '</span></div>' +
+        '<section class="stack-s" aria-label="기본 정보">' +
+          '<div class="tags">' + p.tags.map(function (t) { return '<span class="tag t-' + t.tone + '">' + esc(t.text) + '</span>'; }).join('') + '</div>' +
+          '<h1>' + esc(p.name) + '</h1>' +
+          (p.address ? '<p class="body2">' + esc(p.address) + '</p>' : '') +
+          '<div class="sub">' + esc(p.distance) + '</div>' +
+          (pt ? '<div class="planned">' + dayKo + ' · ' + esc(pt) + '</div>' : '') +
+        '</section>' +
+        '<section class="card pad stack-s" aria-label="우리 아이에게"><h2 class="h16">💛 우리 아이에게</h2>' +
+          (p.reason ? '<p class="body2">' + esc(p.reason) + '</p>' : '') +
+          (p.highlight ? '<p class="body2 hl">🔭 ' + esc(p.highlight) + '</p>' : '') +
+          '<div class="grid2">' + cells + '</div></section>' +
+        '<section class="card pad stack-s" aria-label="' + esc(sc.title) + '"><h2 class="h16">' + (p.ref_type === 'event' ? '🗓️ ' : '🕘 ') + esc(sc.title) + '</h2>' + rows +
+          (sc.note ? '<div class="sub">' + esc(sc.note) + '</div>' : '') +
+          (sc.warn ? '<div class="small warn-text">' + esc(sc.warn) + '</div>' : '') + '</section>' +
+        (p.related ? '<section class="card pad stack-s" aria-label="같은 건물"><h2 class="h16">🏢 같은 건물에 있어요</h2><p class="body2">' + esc(p.related) + '</p></section>' : '') +
+        (p.booking ? '<section class="card pad stack-s" aria-label="예약"><h2 class="h16">🎟️ 예약</h2>' +
+          (p.booking.rule ? '<p class="body2">' + esc(p.booking.rule) + '</p>' : '') +
+          (p.booking.url ? '<a class="btn" href="' + esc(p.booking.url) + '" target="_blank" rel="noopener">' + esc(p.booking.label) + ' 열기</a>' : '') +
+          '</section>' : '') +
+        '<section class="stack-s" aria-label="위치"><h2 class="h16">📍 위치</h2>' +
+          (p.transit ? '<p class="body2">' + esc(p.transit) + '</p>' : '') +
+          '<div class="grid2"><a class="btn" href="' + esc(p.maps.kakao) + '" target="_blank" rel="noopener">🚗 카카오맵 길찾기</a>' +
+          '<a class="btn" href="' + esc(p.maps.naver) + '" target="_blank" rel="noopener">🗺️ 네이버지도 열기</a></div></section>' +
+        '<section class="small sub stack-s" aria-label="정보 출처">' +
+          '<div>출처: ' + sources + '</div>' +
+          '<div>정보가 다르면 알려주세요. 다음 확인 때 반영돼요. <button class="linkbtn" data-act="wrong">정보가 달라요</button></div>' +
+          '<div id="wrongBox" class="stack-s" hidden><label for="wrongNote" class="sr">무엇이 다른지</label>' +
+            '<textarea id="wrongNote" rows="3" placeholder="예: 일요일은 18시까지예요"></textarea>' +
+            '<button class="btn" data-act="sendWrong">보내기</button></div>' +
+        '</section>' +
+        rate +
+      '</div>' + bar;
+  }
+
+  // ── 설정
+  function openSettings() {
+    rememberScroll();
+    S.view = 'settings';
+    loading();
+    window.scrollTo(0, 0);
+    call('getSettingsView').then(function (v) {
+      S.settings = v;
+      renderSettings();
+    }).catch(showError);
+  }
+
+  function renderSettings() {
+    var v = S.settings;
+    var x = v.values;
+    var ex = String(x.exclude_categories || '').split(',');
+    function input(id, name, type, label, extra) {
+      return '<div class="field"><label for="' + id + '"' + (extra && extra.small ? ' class="lbl-s"' : '') + '>' + label + '</label>' +
+        '<input id="' + id + '" name="' + name + '" type="' + type + '" value="' + esc(x[name]) + '"' +
+        (type === 'number' ? ' step="any" inputmode="decimal"' : '') + '>' +
+        (extra && extra.hint ? '<span class="sub">' + extra.hint + '</span>' : '') + '</div>';
+    }
+    app.innerHTML =
+      '<div class="view" style="gap:24px">' +
+        '<div class="dtop"><button class="back" data-act="home">' + ICON.back + '홈</button><span class="sub small">' + esc(v.member) + '로 보는 중</span></div>' +
+        '<h1>설정</h1>' +
+        '<form id="setForm" class="stack" style="gap:20px" novalidate>' +
+          input('f_birth', 'child_birthdate', 'date', '아이 생년월일', { hint: '개월수 계산과 월령에 맞는 추천에만 써요' }) +
+          input('f_likes', 'kid_interests', 'text', '아이가 좋아하는 것', { hint: '쉼표로 나눠 적어요. 예: 기차, 동물, 물놀이 · 🔭 구경거리 추천에 반영돼요' }) +
+          '<fieldset class="field"><legend>기준 위치</legend>' +
+            input('f_label', 'base_label', 'text', '이름', { small: true }) +
+            input('f_addr', 'base_address', 'text', '주소', { small: true }) +
+            '<div class="grid2">' + input('f_lat', 'base_lat', 'number', '위도', { small: true }) + input('f_lng', 'base_lng', 'number', '경도', { small: true }) + '</div>' +
+          '</fieldset>' +
+          '<div class="grid2">' + input('f_drive', 'max_drive_min', 'number', '자차 편도 최대(분)') + input('f_radius', 'radius_km', 'number', '검색 반경(km)') + '</div>' +
+          '<fieldset class="field"><legend>추천에서 뺄 장소 유형</legend><div class="checks">' +
+            Object.keys(v.categories).map(function (k) {
+              return '<label class="check-item"><input type="checkbox" name="exclude" value="' + k + '"' + (ex.indexOf(k) >= 0 ? ' checked' : '') + '>' + esc(v.categories[k]) + '</label>';
+            }).join('') + '</div></fieldset>' +
+          '<div class="card pad stack-s"><h2 class="h16">알림</h2><p class="body2">' + esc(v.notify) + '</p>' +
+            '<p class="sub">Claude 예약 작업이 보내요. 요일·시간을 바꾸려면 Claude에게 말해 주세요.</p></div>' +
+          '<div class="card pad stack-s"><h2 class="h16">멤버</h2><p class="body2">' + esc(v.members.join(', ')) + '</p>' +
+            '<p class="sub">각자 받은 링크로 열면 누가 담았는지 구분돼요.</p></div>' +
+          '<button class="btn-lg primary" type="submit">저장</button>' +
+        '</form>' +
+      '</div>';
+  }
+
+  function saveSettingsForm(form) {
+    var fd = new FormData(form);
+    var obj = {};
+    ['child_birthdate', 'kid_interests', 'base_label', 'base_address', 'base_lat', 'base_lng', 'max_drive_min', 'radius_km'].forEach(function (k) { obj[k] = fd.get(k); });
+    obj.exclude_categories = fd.getAll('exclude').join(',');
+    var btn = form.querySelector('[type=submit]');
+    btn.disabled = true;
+    call('saveSettings', obj).then(function (v) {
+      S.settings = v;
+      S.homeStale = true;
+      renderSettings();
+      toast('저장했어요');
+    }).catch(function (err) {
+      btn.disabled = false;
+      toast(msgOf(err));
+    });
+  }
+
+  // ── 버튼 동작
+  function failTo(el) { return function (err) { if (el) el.disabled = false; toast(msgOf(err)); }; }
+  var H = {
+    reload: function () { S.homeStale = true; nav({ v: 'home' }); },
+    home: function () { nav({ v: 'home' }); },
+    settings: function () { nav({ v: 's' }); },
+    open: function (el) { nav({ v: 'd', t: el.getAttribute('data-type'), id: el.getAttribute('data-id'), day: S.day }); },
+    day: function (el) { S.day = el.getAttribute('data-day'); renderHome(); },
+    tab: function (el) { S.tab = el.getAttribute('data-tab'); renderHome(); window.scrollTo(0, 0); },
+    more: function (el) {
+      var key = el.getAttribute('data-key');
+      S.page[key] = ((S.page[key] || 0) + 1) % Number(el.getAttribute('data-pages'));
+      renderHome();
+      var sec = document.getElementById('sec-' + key.replace(':', '-'));
+      if (sec) sec.scrollIntoView({ block: 'start' });
+      call('act', { type: 'refresh', ref_id: key }).catch(function () {});
+    },
+    booked: function (el) {
+      var key = el.getAttribute('data-key');
+      el.disabled = true;
+      call('act', { type: 'booked', key: key }).then(function () {
+        var b = S.home.bookings.filter(function (x) { return x.key === key; })[0];
+        S.home.bookings = S.home.bookings.filter(function (x) { return x.key !== key; });
+        if (b) {
+          b.group = 'booked';
+          b.badge = '예약 완료';
+          b.tone = 'top';
+          b.when = b.when.replace(/^.* 오픈 · /, '').replace(' 방문분', ' 방문') + ' · ' + S.home.member + ' 예약';
+          S.home.booked = [b].concat(S.home.booked || []);
+        }
+        renderHome();
+        toast('예약해 둔 곳으로 옮겼어요');
+      }).catch(failTo(el));
+    },
+    plan: function (el) {
+      var p = S.detail;
+      var day = S.day === 'sun' ? 'sun' : 'sat';
+      el.disabled = true;
+      call('act', { type: 'plan', ref_id: p.id, day: day }).then(function (r) {
+        p.plan[day].me = r.planned;
+        S.homeStale = true;
+        renderDetail();
+        toast(r.planned ? '계획에 담았어요' : '계획에서 뺐어요');
+      }).catch(failTo(el));
+    },
+    visited: function (el) {
+      el.disabled = true;
+      call('act', { type: 'visited', ref_id: S.detail.id }).then(function () {
+        S.detail.visited = true;
+        S.recordsStale = true;
+        renderDetail();
+        toast('다녀온 곳으로 기록했어요');
+      }).catch(failTo(el));
+    },
+    rate: function (el) {
+      var v = el.getAttribute('data-v');
+      el.disabled = true;
+      call('act', { type: v, ref_id: S.detail.id }).then(function () {
+        S.detail.rating = v;
+        S.homeStale = true;
+        S.recordsStale = true;
+        renderDetail();
+        toast(v === 'good' ? '또 가고 싶은 곳으로 기록했어요' : '다음부터 추천에서 뺄게요');
+      }).catch(failTo(el));
+    },
+    wrong: function () {
+      var box = document.getElementById('wrongBox');
+      box.hidden = !box.hidden;
+      if (!box.hidden) document.getElementById('wrongNote').focus();
+    },
+    sendWrong: function (el) {
+      var note = document.getElementById('wrongNote').value.trim();
+      el.disabled = true;
+      call('act', { type: 'info_wrong', ref_id: S.detail.id, note: note }).then(function () {
+        document.getElementById('wrongBox').hidden = true;
+        el.disabled = false;
+        toast('고마워요. 다음 확인 때 반영돼요');
+      }).catch(failTo(el));
+    }
+  };
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    var fn = H[el.getAttribute('data-act')];
+    if (fn) { e.preventDefault(); fn(el); }
+  });
+  document.addEventListener('submit', function (e) {
+    if (e.target.id === 'setForm') { e.preventDefault(); saveSettingsForm(e.target); }
+  });
+
+  try { google.script.history.setChangeHandler(function (e) { route(e.state); }); } catch (e) { /* 없음 */ }
+  google.script.url.getLocation(function (loc) {
+    S.key = (loc.parameter && loc.parameter.k) || '';
+    try { google.script.history.replace({ v: 'home' }); } catch (e) { /* 없음 */ }
+    route({ v: 'home' });
+  });
+})();
+</script>
+</body>
+</html>

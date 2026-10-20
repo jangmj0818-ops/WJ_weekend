@@ -1,6 +1,7 @@
 # 비밀값: API 키·공유 비밀은 Apps Script의 Script Properties에만 둔다 (CLAUDE.md 2장 4번)
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 secrets*
@@ -16,6 +17,7 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+.claude/
 
 # 의존성·빌드 결과
 node_modules/
