@@ -1,0 +1,22 @@
+# 비밀값: API 키·공유 비밀은 Apps Script의 Script Properties에만 둔다 (CLAUDE.md 2장 4번)
+.env
+.env.*
+*.key
+*.pem
+secrets*
+credentials*.json
+client_secret*.json
+
+# clasp 로그인 정보 (구글 계정 토큰)
+.clasprc.json
+
+# 운영체제·에디터 임시 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# 의존성·빌드 결과
+node_modules/
+dist/
